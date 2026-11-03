@@ -451,9 +451,7 @@ a { color: inherit; }
   line-height: 1.4;
 }
 .about-me__text .about-me__extra { margin-top: 14px; font-size: 15px; }
-.about-me__extra strong { font-weight: 700; }
-.nowrap { white-space: nowrap; }
-.works__group > .title { margin-bottom: clamp(24px, 2.5vw, 34px); }
+.about-me__extra strong { font-weight: 700; }.works__group > .title { margin-bottom: clamp(24px, 2.5vw, 34px); }
 
 .polaroid {
   background:
