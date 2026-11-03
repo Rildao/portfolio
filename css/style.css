@@ -152,6 +152,23 @@ a { color: inherit; }
       transparent calc(100% - var(--t3) * 0.62), #000 calc(100% - var(--t3) * 0.46));
 }
 
+/* Contact: rasgo só em cima (mesmo recorte 2 do Works) */
+.contact {
+  margin-top: calc(var(--t2) * -0.85);
+  -webkit-mask-image: url("../assets/img/tear-2.png"), linear-gradient(#000, #000);
+          mask-image: url("../assets/img/tear-2.png"), linear-gradient(#000, #000);
+  -webkit-mask-size: 100% auto, 100% calc(100% - var(--t2) * 0.88);
+          mask-size: 100% auto, 100% calc(100% - var(--t2) * 0.88);
+  -webkit-mask-position: top, 0 calc(var(--t2) * 0.88);
+          mask-position: top, 0 calc(var(--t2) * 0.88);
+}
+.contact::before {
+  background-image: url("../assets/img/tear-2.png");
+  background-position: top;
+  -webkit-mask-image: linear-gradient(to bottom, #000 0, #000 calc(var(--t2) * 0.74), transparent calc(var(--t2) * 0.9));
+          mask-image: linear-gradient(to bottom, #000 0, #000 calc(var(--t2) * 0.74), transparent calc(var(--t2) * 0.9));
+}
+
 /* =========================================================
    Títulos
    ========================================================= */
@@ -193,35 +210,62 @@ a { color: inherit; }
   display: grid;
   grid-template-columns: 250px minmax(0, 430px) auto;
   justify-content: center;
-  align-items: start;
+  align-items: center;
   gap: 24px clamp(24px, 4vw, 64px);
   margin-top: clamp(36px, 4vw, 56px);
 }
 
-/* caixa de seleção estilo Photoshop */
+/* caixa de seleção estilo Photoshop.
+   .selection só guarda o espaço no layout; .selection__box é a "camada" que estica
+   quando a pessoa arrasta as alças (js/main.js) */
+/* camadas (sem z-index na caixa, pra se misturarem com os textos):
+   foto (0) → textos (1) → linha azul (2) → alças (3) */
 .selection {
   position: relative;
   width: 250px;
   aspect-ratio: 1;
-  border: 1.5px solid var(--ps-blue);
+}
+.selection__box {
+  position: absolute;
+  inset: 0;
+  border: 1.5px solid transparent;
   display: flex;
   align-items: flex-end;
   justify-content: center;
   padding: 0 8px;
-  transition: transform .3s var(--ease-out);
 }
-.selection:hover {
-  transform: scale(1.05);
-  transition: transform .45s cubic-bezier(.34, 1.6, .64, 1);   /* "pulinho" */
+.selection__box::after {
+  content: "";
+  position: absolute;
+  inset: -1.5px;
+  z-index: 2;
+  border: 1.5px solid var(--ps-blue);
+  pointer-events: none;
 }
+.selection__box.is-resetting { transition: inset .45s cubic-bezier(.34, 1.4, .64, 1); }
 .selection img { width: 100%; }
+/* depois do primeiro arraste a foto passa a ocupar a camada em %, aí ela distorce junto */
+.selection img.is-pinned { position: absolute; z-index: 0; max-width: none; }
 .h {
   position: absolute;
+  z-index: 3;
   width: 11px; height: 11px;
   background: #fff;
   border: 1.5px solid var(--ps-blue);
   transform: translate(-50%, -50%);
 }
+/* esticar só existe com mouse (ver js/main.js) */
+@media (hover: hover) and (pointer: fine) {
+  .h::before { content: ""; position: absolute; inset: -9px; }   /* área de clique maior que o quadradinho */
+  .h--tl, .h--br { cursor: nwse-resize; }
+  .h--tr, .h--bl { cursor: nesw-resize; }
+  .h--tc, .h--bc { cursor: ns-resize; }
+  .h--ml, .h--mr { cursor: ew-resize; }
+}
+.is-dragging, .is-dragging * { cursor: grabbing !important; -webkit-user-select: none; user-select: none; }
+
+/* os textos ficam sempre por cima da foto esticada */
+.logo, .about__text, .skills, .about-me__text { position: relative; z-index: 1; }
 .h--tl { left: 0;    top: 0; }
 .h--tc { left: 50%;  top: 0; }
 .h--tr { left: 100%; top: 0; }
@@ -276,38 +320,7 @@ a { color: inherit; }
 .stat-link .tip { bottom: calc(100% + 10px); }
 .stat-link:focus-visible { outline: 2px dashed var(--ink); outline-offset: 6px; }
 
-.lang {
-  margin-top: 30px;
-  font-size: 15px;
-  font-weight: 400;
-  line-height: 1.35;
-}
-.lang strong { font-weight: 700; }
-
-/* tags de nicho */
-.tags {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin-top: 22px;
-}
-.tags li {
-  padding: 5px 12px;
-  border: 1.5px solid var(--ink);
-  border-radius: 999px;
-  background: rgba(255, 255, 255, .55);
-  font-weight: 600;
-  font-size: 12px;
-  transition: transform .25s var(--ease-out), background .25s, color .25s;
-}
-.tags li:hover {
-  transform: translateY(-2px);
-  background: var(--ink);
-  color: #fff;
-}
-
 /* textos decorativos: sem cursor de texto e sem seleção */
-.tags li,
 .polaroid__caption,
 .video__soon {
   cursor: default;
@@ -368,7 +381,8 @@ a { color: inherit; }
 }
 .skill:hover .tip,
 .stat-link:hover .tip,
-.stat-link:focus-visible .tip {
+.stat-link:focus-visible .tip,
+.tip.is-visible {
   opacity: 1;
   transform: translateX(-50%) scale(1);
   transition: transform .32s cubic-bezier(.34, 1.8, .64, 1), opacity .12s ease-out;
@@ -404,6 +418,62 @@ a { color: inherit; }
    Polaroids e vídeos
    ========================================================= */
 .works__group + .works__group { margin-top: clamp(90px, 10vw, 140px); }
+
+/* About me (faixa escura entre Clients e Contact) */
+.about-band {
+  padding: calc(var(--t3) * 0.5 + clamp(56px, 6vw, 90px)) 0 calc(var(--t2) * 0.85 + clamp(56px, 6vw, 90px));
+}
+.about-me {
+  display: grid;
+  grid-template-columns: auto minmax(0, 540px);
+  justify-content: center;
+  align-items: center;
+  gap: 24px clamp(36px, 5vw, 80px);
+}
+/* foto de corpo inteiro: a caixa de seleção abraça o recorte, tipo Free Transform */
+.selection.selection--full {
+  --ph: clamp(360px, 34vw, 460px);              /* altura da foto */
+  --pad: clamp(18px, 2vw, 28px);                /* folguinha dos lados */
+  width: calc(var(--ph) * 290 / 707 + var(--pad) * 2 + 3px);
+  height: var(--ph);
+  aspect-ratio: auto;
+}
+.selection--full .selection__box { padding: 0 var(--pad); }
+.selection--full img {
+  width: auto;
+  height: 100%;
+}
+/* sombra projetada branca e dura, só pra direita (assim não sai da seleção por baixo) */
+.selection img { filter: drop-shadow(4px 0 0 #fff); }
+.about-me__text .title { margin-bottom: 12px; }
+.about-me__text p {
+  font-size: 17px;
+  line-height: 1.4;
+}
+.about-me__text .about-me__extra { margin-top: 14px; font-size: 15px; }
+.about-me__extra strong { font-weight: 700; }
+.nowrap { white-space: nowrap; }
+
+/* quick facts: mesmo estilo dos números do topo, em tamanho menor */
+.facts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 18px clamp(22px, 2.4vw, 30px);
+  margin-top: 28px;
+}
+.facts li { display: flex; flex-direction: column; gap: 6px; }
+.facts strong {
+  font-weight: 700;
+  font-size: clamp(15px, 1.3vw, 17px);
+  line-height: 1;
+}
+.facts span {
+  font-weight: 600;
+  font-size: 11px;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, .6);
+}
 .works__group > .title { margin-bottom: clamp(24px, 2.5vw, 34px); }
 
 .polaroid {
@@ -624,7 +694,7 @@ a { color: inherit; }
    Contato
    ========================================================= */
 .contact {
-  padding: calc(var(--t3) * 0.5 + clamp(44px, 5vw, 70px)) 0 36px;
+  padding: calc(var(--t2) + clamp(30px, 4vw, 56px)) 0 36px;
 }
 /* 3 colunas de largura igual: os ícones ficam simétricos, independente do tamanho dos textos */
 .contact__list {
@@ -645,21 +715,21 @@ a { color: inherit; }
   align-items: center;
   gap: 12px;
   cursor: pointer;
-  color: #fff;
+  color: var(--ink);
   transition: transform .35s var(--ease-out);
 }
 .contact__item svg {
   width: clamp(84px, 9vw, 120px);
   height: clamp(84px, 9vw, 120px);
   fill: currentColor;
-  filter: drop-shadow(0 6px 8px rgba(0, 0, 0, .45));
+  filter: drop-shadow(0 6px 8px rgba(0, 0, 0, .25));
   transition: filter .35s var(--ease-out);
 }
 .contact__item svg.icon-mail { fill: none; stroke: currentColor; stroke-width: 2.1; stroke-linejoin: round; }
 .contact__item:hover { transform: translateY(-6px) rotate(-3deg); }
 .contact__list li:nth-child(even) .contact__item:hover { transform: translateY(-6px) rotate(3deg); }
-.contact__item:hover svg { filter: drop-shadow(0 16px 14px rgba(0, 0, 0, .6)); }
-.contact__item:focus-visible { outline: 2px dashed #fff; outline-offset: 8px; }
+.contact__item:hover svg { filter: drop-shadow(0 16px 14px rgba(0, 0, 0, .35)); }
+.contact__item:focus-visible { outline: 2px dashed var(--ink); outline-offset: 8px; }
 .contact__label {
   font-weight: 700;
   font-size: 15px;
@@ -668,7 +738,7 @@ a { color: inherit; }
   margin-top: clamp(56px, 6vw, 80px);
   text-align: center;
   font-size: 12px;
-  color: rgba(255, 255, 255, .35);
+  color: rgba(0, 0, 0, .4);
 }
 
 .toast {
@@ -706,7 +776,11 @@ a { color: inherit; }
   .about { grid-template-columns: 1fr; justify-items: center; text-align: center; }
   .selection { width: min(240px, 70vw); }
   .about__text { max-width: 440px; }
-  .stats, .tags { justify-content: center; }
+  .stats { justify-content: center; }
+  .about-me { grid-template-columns: 1fr; justify-items: center; text-align: center; }
+  .about-me__text { max-width: 440px; }
+  .selection.selection--full { --ph: 340px; }
+  .facts { justify-content: center; gap: 18px 22px; }
   .stats { gap: 18px; flex-wrap: nowrap; }
   .stats strong { font-size: 24px; }
   .stats span:not(.tip) { font-size: 10px; }
