@@ -395,13 +395,13 @@ a { color: inherit; }
   padding: calc(var(--t1) * 0.5 + clamp(36px, 4vw, 56px)) 0 calc(var(--t2) * 0.85 + clamp(36px, 4vw, 56px));
 }
 .band__buttons {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 270px));   /* 4 numa linha; 2x2 no tablet */
   justify-content: center;
-  gap: clamp(20px, 3vw, 44px);
+  gap: clamp(16px, 2.4vw, 36px);
 }
 .tag-btn {
-  width: clamp(220px, 24vw, 330px);
+  width: 100%;
   filter: drop-shadow(0 6px 6px rgba(0, 0, 0, .55));
   transition: transform .35s var(--ease-out), filter .35s var(--ease-out);
 }
@@ -747,6 +747,7 @@ a { color: inherit; }
   .selection { width: 220px; }
   .skills { grid-column: 1 / -1; justify-self: center; text-align: center; }
   .skills__grid { grid-template-columns: repeat(6, 44px); }
+  .band__buttons { grid-template-columns: repeat(2, minmax(0, 290px)); }
 }
 
 @media (max-width: 640px) {
@@ -762,8 +763,7 @@ a { color: inherit; }
   .skills__grid { grid-template-columns: repeat(3, 48px); justify-content: center; }
   .skill { width: 48px; height: 48px; }
 
-  .band__buttons { flex-direction: column; align-items: center; }
-  .tag-btn { width: min(280px, 78vw); }
+  .band__buttons { grid-template-columns: min(280px, 78vw); }
 
   .short-list { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .polaroid--tall { padding: 6px 6px 0; }
