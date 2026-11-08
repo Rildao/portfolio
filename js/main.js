@@ -24,11 +24,16 @@ document.querySelectorAll(".video").forEach((box) => {
   const thumb = new Image();
   thumb.alt = "";
   thumb.loading = "lazy";
-  thumb.src = `https://i.ytimg.com/vi/${id}/maxresdefault.jpg`;
-  // quando o vídeo não tem thumbnail em alta, o YouTube devolve uma imagem cinza de 120px
-  thumb.addEventListener("load", () => {
-    if (thumb.naturalWidth <= 120) thumb.src = `https://i.ytimg.com/vi/${id}/hqdefault.jpg`;
-  });
+  if (box.dataset.cover) {
+    // capa própria do portfólio (data-cover); sem ela, usa a thumbnail do YouTube
+    thumb.src = box.dataset.cover;
+  } else {
+    thumb.src = `https://i.ytimg.com/vi/${id}/maxresdefault.jpg`;
+    // quando o vídeo não tem thumbnail em alta, o YouTube devolve uma imagem cinza de 120px
+    thumb.addEventListener("load", () => {
+      if (thumb.naturalWidth <= 120) thumb.src = `https://i.ytimg.com/vi/${id}/hqdefault.jpg`;
+    });
+  }
   btn.append(thumb);
 
   btn.addEventListener("click", () => {
