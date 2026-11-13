@@ -1,3 +1,45 @@
+// Métricas (Microsoft Clarity). Se o Clarity não carregou (prévia local, bloqueador), não faz nada.
+function track(name) {
+  if (typeof window.clarity === "function") window.clarity("event", name);
+}
+
+// ?ref=... no link (ex.: rildao.com/?ref=twitter) vira uma etiqueta pra filtrar de onde a pessoa veio
+const ref = new URLSearchParams(location.search).get("ref");
+if (ref && typeof window.clarity === "function") window.clarity("set", "ref", ref.slice(0, 60));
+
+// Até onde a pessoa chegou na página: um evento na primeira vez que cada seção aparece
+const SECTIONS = { "long-form": "Long form", "short-form": "Short form", trailers: "Trailers", clients: "Clients", about: "About me" };
+if ("IntersectionObserver" in window) {
+  const seen = new IntersectionObserver((entries) => {
+    entries.forEach((en) => {
+      if (!en.isIntersecting) return;
+      const el = en.target;
+      track(el.classList.contains("contact") ? "Reached: Contact (end)" : `Reached: ${SECTIONS[el.id]}`);
+      seen.unobserve(el);
+    });
+  }, { rootMargin: "0px 0px -35% 0px" });   // conta quando o topo da seção passa de ~2/3 da tela
+  Object.keys(SECTIONS).forEach((id) => { const el = document.getElementById(id); if (el) seen.observe(el); });
+  const contact = document.querySelector(".contact");
+  if (contact) seen.observe(contact);
+}
+
+// Cliques em contatos, clientes e no YT Jobs
+document.addEventListener("click", (e) => {
+  const el = e.target.closest(".contact__item, .client, .stat-link, .tag-btn");
+  if (!el) return;
+  if (el.matches(".contact__item")) {
+    const label = el.querySelector(".contact__label")?.textContent.trim() || "";
+    const kind = label.includes("@rildao.com") ? "Email" : label.startsWith("@") ? "X/Twitter" : "Discord";
+    track(`Contact: ${kind}`);
+  } else if (el.matches(".client")) {
+    track(`Client link: ${el.querySelector(".client__name")?.firstChild.textContent.trim()}`);
+  } else if (el.matches(".stat-link")) {
+    track("YT Jobs profile");
+  } else {
+    track(`Menu: ${el.querySelector("img")?.alt}`);
+  }
+});
+
 // Todo link pra fora do site abre em aba nova, pra pessoa não sair do portfólio.
 document.querySelectorAll('a[href^="http"]').forEach((a) => {
   if (a.host !== location.host) {
@@ -37,6 +79,7 @@ document.querySelectorAll(".video").forEach((box) => {
   btn.append(thumb);
 
   btn.addEventListener("click", () => {
+    track(`Play: ${title}`);
     // shorts abrem ampliados por cima da página (o player vertical do YouTube não tem tela cheia)
     if (box.classList.contains("video--tall")) {
       openLightbox(id, title, btn);
